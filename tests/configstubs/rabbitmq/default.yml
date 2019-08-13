@@ -1,0 +1,8 @@
+rabbitmq:
+  hostname: testrabbit
+  name: myrabbit
+  erlangcookie: '->/home/andi/Documents/HAW/BA/Chainchomp/chainchomp-config/tests/configstubs/rabbitmq/erlangcookie'
+  profile:
+    # stock profiles are provided by chainchomp
+    stock: true
+    type: 'default'
