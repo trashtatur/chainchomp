@@ -1,4 +1,0 @@
-kafka:
-  hostname: defaultrabbit
-  chainlinkname: defaultlink
-  remoteconf: false

@@ -1,5 +1,0 @@
-name: default
-test: value
-some:
-  other:
-    test: value

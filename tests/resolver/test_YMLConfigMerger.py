@@ -1,7 +1,9 @@
 import unittest
 
+from tests.ChainchompTestCase import ChainchompConfigTestCase
 
-class YMLConfigMergerTest(unittest.TestCase):
+
+class YMLConfigMergerTest(ChainchompConfigTestCase):
     def test_something(self):
         self.assertEqual(True, False)
 

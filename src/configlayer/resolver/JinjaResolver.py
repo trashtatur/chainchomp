@@ -4,9 +4,10 @@ import os
 from jinja2 import Template
 
 import errors
+from configlayer.resolver.AbstractResolver import AbstractResolver
 
 
-class JinjaResolver:
+class JinjaResolver(AbstractResolver):
 
     def __init__(self, helper_path: str):
 
@@ -25,19 +26,22 @@ class JinjaResolver:
 
     def find_and_resolve_helper(self):
         """
-        Finds the helper module and creates an object from it
-        :return: Object of the helper class
+        Finds the indicated helper file if it was correctly denoted and imports it
+        so that the functions can be used to resolve values in the YAML config file.
+
+        :raises: errors.VoidHelperSuppliedError
+        :raises: errors.InvalidHelperModuleError
+        :return: The created helper object
         """
         if self.helper_path is not None:
             try:
                 if os.path.isfile(self.helper_path):
-                    modulename = os.path.basename(self.helper_path).split(".")[0]
-                    imported = importlib.machinery.SourceFileLoader(modulename, self.helper_path).load_module()
-                    helperclass = getattr(imported, modulename)
-                    return helperclass()
+                    module_name = os.path.basename(self.helper_path).split(".")[0]
+                    imported = importlib.machinery.SourceFileLoader(module_name, self.helper_path).load_module()
+                    helper_class = getattr(imported, module_name)
+                    return helper_class()
                 else:
-                    raise errors.VoidHelperSuppliedError(self.helper_path,
-                                                    "The supplied helper class could not be found. Might not be a file")
+                    raise errors.VoidHelperSuppliedError(self.helper_path,"The supplied helper class could not be found. Might not be a file")
             except FileNotFoundError:
                 raise errors.VoidHelperSuppliedError(self.helper_path, "The supplied helper class was not found")
             except AttributeError:

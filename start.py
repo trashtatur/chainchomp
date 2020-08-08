@@ -2,14 +2,13 @@ import os
 import yaml
 
 import definitions
-from configs import MQs
 import errors
-from resolver.YMLConfigBuilder import YMLConfigBuilder
-from resolver.YMLConfigMerger import YMLConfigMerger
-from verify.SchemaVerifier import SchemaVerifier
+from configlayer.model.ChainlinkConfigModel import ChainlinkConfigModel
+from configlayer.reader import YMLConfigBuilder, YMLConfigMerger
+from configlayer.verify.SchemaVerifier import SchemaVerifier
 
 
-def read_config(path: str) -> dict:
+def read_config(path: str) -> ChainlinkConfigModel:
     # 1 VERIFY YML CONFIG SUPPLIED
     verifier = SchemaVerifier()
     verifier.verifiy(__read_in_external_config(path))
@@ -33,21 +32,15 @@ def __read_in_external_config(path: str) -> dict:
         raise errors.VoidExternalConfigurationError(path, "The config file could not be found at the given path")
 
 
-def __extract_config_type(config: dict) -> MQs.MQTypes:
-    if 'rabbitmq' in config['chainlink'].keys():
-        return MQs.MQTypes.RABBITMQ
-    if 'kafka' in config['chainlink'].keys():
-        return MQs.MQTypes.KAFKA
-    else:
-        raise errors.InvalidMessageQueueTypeError(
-            "The supplied messagequeuetype is not supported. Must be either 'kafka' or 'rabbitmq'")
+def __extract_config_type(config: dict):
+    pass
 
 
 def __extract_helper(path: str):
     if os.path.isfile(path):
         line = open(path).readline()
         if line[:1] == "#":
-            if "stock:" in line[:8]:
+            if "stock:" in line[1:].strip():
                 filename = line.split("stock:", 1)[1].strip().rstrip()
                 return os.path.join(definitions.STOCK_HELPER_PATH, filename)
             else:
@@ -55,4 +48,4 @@ def __extract_helper(path: str):
     return None
 
 
-print(read_config(os.path.join(definitions.CONFIG_FOLDER, "rabbitmq/default.yml")))
+print(read_config(os.path.join(definitions.CONFIG_FOLDER, "default.yml")).raw_config)
