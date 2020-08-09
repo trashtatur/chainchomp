@@ -1,0 +1,2 @@
+hostname: "{{ gethostname() }}"
+erlangcookie: '{{ getCookieInfo() }}'
