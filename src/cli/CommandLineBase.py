@@ -1,8 +1,8 @@
-import os
 import click
+
+from cli.reader.CommandModuleLocationReader import read_registered_modules, read_module_locations, \
+    read_paths_config_of_modules
 from cli.resolver.CommandModuleLocationResolver import CommandModuleLocationResolver
-import definitions
-import chainchomplib
 
 commandModuleResolver = CommandModuleLocationResolver()
 
@@ -12,12 +12,12 @@ def chainchomp():
     pass
 
 
-def search_for_sub_commands(directory=definitions.ROOT_DIR):
-    for element in os.scandir(directory):
-        if element.is_file():
-            commandModuleResolver.import_click_module(element, chainchomp)
-        if element.is_dir():
-            search_for_sub_commands(directory)
+def search_for_sub_commands():
+    modules = read_registered_modules()
+    module_locations = read_module_locations(modules)
+    sub_command_locations = read_paths_config_of_modules(module_locations)
+    for command_location in sub_command_locations:
+        commandModuleResolver.import_click_module(command_location.get('commands'), chainchomp)
 
 
 def main():

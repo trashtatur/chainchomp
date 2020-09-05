@@ -1,4 +1,3 @@
-
 class ChainlinkConfigModel:
 
     def __init__(self, raw_config: dict):
