@@ -3,7 +3,7 @@ import os
 import yaml
 
 import definitions
-from configlayer.model.ChainlinkConfigModel import ChainlinkConfigModel
+from configlayer.model.ChainlinkRawConfigModel import ChainlinkConfigModel
 from configlayer.model import MQTypes
 from configlayer.resolver import ProfileResolver
 

@@ -1,0 +1,2 @@
+class MalformedConfigError(Exception):
+    pass
