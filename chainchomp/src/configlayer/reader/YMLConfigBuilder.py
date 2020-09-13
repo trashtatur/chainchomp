@@ -1,4 +1,5 @@
-from configlayer.model.ChainlinkRawConfigModel import ChainlinkConfigModel
+from chainchomplib.configlayer.model.ChainlinkConfigModel import ChainlinkConfigModel
+
 from configlayer.resolver.JinjaResolver import JinjaResolver
 
 

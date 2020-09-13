@@ -1,10 +1,9 @@
 import os
 
 import yaml
+from chainchomplib.configlayer.model.ChainlinkConfigModel import ChainlinkConfigModel
 
 import definitions
-from configlayer.model.ChainlinkRawConfigModel import ChainlinkConfigModel
-from configlayer.model import MQTypes
 from configlayer.resolver import ProfileResolver
 
 
@@ -13,7 +12,7 @@ class YMLConfigMerger:
     This class merges externally provided model with the default config
     """
 
-    def __init__(self, mqtype: MQTypes):
+    def __init__(self, mqtype: str):
         self.mqtype = mqtype
         self.profileResolver = None
 

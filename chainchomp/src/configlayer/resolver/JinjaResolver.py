@@ -41,7 +41,7 @@ class JinjaResolver(AbstractResolver):
                     helper_class = getattr(imported, module_name)
                     return helper_class()
                 else:
-                    raise errors.VoidHelperSuppliedError(self.helper_path,"The supplied helper class could not be found. Might not be a file")
+                    raise errors.VoidHelperSuppliedError(self.helper_path, "The supplied helper class could not be found. Might not be a file")
             except FileNotFoundError:
                 raise errors.VoidHelperSuppliedError(self.helper_path, "The supplied helper class was not found")
             except AttributeError:

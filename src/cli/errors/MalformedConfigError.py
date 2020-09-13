@@ -1,2 +1,0 @@
-class MalformedConfigError(Exception):
-    pass

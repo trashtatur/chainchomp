@@ -1,5 +1,0 @@
-registered_chainchomp_modules:
-  - adapterlayer
-  - configlayer
-  - chainchomplib
-  - core

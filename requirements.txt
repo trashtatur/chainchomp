@@ -1,4 +1,6 @@
-chainchomp-lib
-unittest-data-provider
-Schema
+chainchomplib
+Schema<=0.7.2
 click
+flask
+PyYAML
+Jinja2

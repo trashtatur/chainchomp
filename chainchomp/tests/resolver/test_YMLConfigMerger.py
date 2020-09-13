@@ -1,6 +1,6 @@
 import unittest
 
-from tests.ChainchompTestCase import ChainchompConfigTestCase
+from chainchomp.tests.ChainchompTestCase import ChainchompConfigTestCase
 
 
 class YMLConfigMergerTest(ChainchompConfigTestCase):
