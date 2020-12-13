@@ -1,6 +1,9 @@
-chainchomplib
-Schema<=0.7.2
-click
+chainchomplib~=0.0.9
 flask
 PyYAML
-Jinja2
+Jinja2~=2.11.2
+asyncio
+setuptools~=50.3.2
+aiohttp~=3.7.2
+python-dispatch
+python-socketio

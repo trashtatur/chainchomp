@@ -1,10 +1,10 @@
 import importlib.machinery
 import os
 
+from chainchomplib.abstracts.AbstractResolver import AbstractResolver
 from jinja2 import Template
 
-import errors
-from configlayer.resolver.AbstractResolver import AbstractResolver
+from chainchomp.src import errors
 
 
 class JinjaResolver(AbstractResolver):
@@ -24,7 +24,7 @@ class JinjaResolver(AbstractResolver):
                 template.globals[fun] = getattr(self.helper, fun)
         return template
 
-    def find_and_resolve_helper(self):
+    def find_and_resolve_helper(self, helper_path):
         """
         Finds the indicated helper file if it was correctly denoted and imports it
         so that the functions can be used to resolve values in the YAML config file.
@@ -33,10 +33,10 @@ class JinjaResolver(AbstractResolver):
         :raises: errors.InvalidHelperModuleError
         :return: The created helper object
         """
-        if self.helper_path is not None:
+        if helper_path is not None:
             try:
-                if os.path.isfile(self.helper_path):
-                    module_name = os.path.basename(self.helper_path).split(".")[0]
+                if os.path.isfile(helper_path):
+                    module_name = os.path.basename(helper_path).split(".")[0]
                     imported = importlib.machinery.SourceFileLoader(module_name, self.helper_path).load_module()
                     helper_class = getattr(imported, module_name)
                     return helper_class()
