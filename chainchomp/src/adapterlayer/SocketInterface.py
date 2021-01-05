@@ -31,14 +31,12 @@ class SocketInterface:
             connection for connection in self.active_adapter_connections
             if connection.sid != socket_id
         ]
-        print(self.active_adapter_connections)
 
     def deactivate_client_connection(self, socket_id):
         self.active_chainlink_connections = [
             connection for connection in self.active_chainlink_connections
             if connection.sid != socket_id
         ]
-        print(self.active_chainlink_connections)
 
     def get_adapter_connection_by_adapter_name(self, adapter_name: str) -> Connection or None:
         connection_optional = [

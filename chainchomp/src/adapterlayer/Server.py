@@ -1,8 +1,11 @@
 import socketio
 from aiohttp import web
 from chainchomplib import LoggerInterface
+from chainchomplib.adapterlayer.Message import Message
+from chainchomplib.adapterlayer.MessageDeserializer import MessageDeserializer
+from chainchomplib.adapterlayer.MessageHeader import MessageHeader
+from chainchomplib.data import SocketEvents
 
-from chainchomp.src.adapterlayer import ServerEvents
 from chainchomp.src.adapterlayer.MessageReceiveWorker import MessageReceiveWorker
 from chainchomp.src.adapterlayer.MessageSendWorker import MessageSendWorker
 from chainchomp.src.adapterlayer.SocketInterface import SocketInterface
@@ -20,30 +23,35 @@ message_send_worker.start()
 routes = web.RouteTableDef()
 
 
-@routes.get('/adapter/assign/link')
-async def hello(request):
+@routes.post('/adapter/assign/link')
+async def assign_link_to_adapter(request):
+    return web.Response(text="Hello, world")
+
+
+@routes.post('/adapter/configure')
+async def configure_adapter(request):
     return web.Response(text="Hello, world")
 
 
 @sio.event
 async def connect(sid, environ: dict):
-    print(environ)
     adapter = environ.get('HTTP_CHAINCHOMP_ADAPTER', None)
     chainlink_name = environ.get('HTTP_CHAINLINK_NAME', None)
     if adapter is not None and chainlink_name is not None:
         LoggerInterface.error(f'{sid} has supplied a wrong configuration of headers to connect. Disconnecting')
         await sio.disconnect(sid)
+    if chainlink_name is None and adapter is None:
+        LoggerInterface.error(f'{sid} did not supply adapter or chainlink name')
+        await sio.disconnect(sid)
     if adapter is not None:
         socket_interface.activate_adapter_connection(
             Connection(sid, True, adapter)
         )
+        await sio.emit(SocketEvents.EMIT_TO_ADAPTER, Message('TEST TEST TEST', MessageHeader('one', ['two', 'three'], 'knorf')).get_serialized(), sid)
     if chainlink_name is not None:
         socket_interface.active_chainlink_connections(
             Connection(sid, True, chainlink_name)
         )
-    if chainlink_name is None and adapter is None:
-        LoggerInterface.error(f'{sid} did not supply adapter or chainlink name')
-        await sio.disconnect(sid)
 
 
 @sio.event
@@ -52,16 +60,24 @@ async def disconnect(sid):
     socket_interface.deactivate_adapter_connection(sid)
 
 
-@sio.on(ServerEvents.RECEIVE_MESSAGE_FROM_ADAPTER)
+@sio.on(SocketEvents.RECEIVE_MESSAGE_FROM_ADAPTER)
 async def receive_message_from_adapter(socket_id, data):
-    socket_interface.queue_message_to_client_application(data)
-    LoggerInterface.info(f'Received message from adapter with socket id {socket_id}')
+    message = MessageDeserializer.deserialize(data)
+    if message is not None:
+        socket_interface.queue_message_to_client_application(data)
+        LoggerInterface.info(f'Received message from adapter with socket id {socket_id}')
+    else:
+        LoggerInterface.error(f'Received incorrect data from {socket_id}: {data}')
 
 
-@sio.on(ServerEvents.RECEIVE_MESSAGE_FROM_CHAINLINK)
+@sio.on(SocketEvents.RECEIVE_MESSAGE_FROM_CHAINLINK)
 async def receive_message_from_chainlink(socket_id, data):
-    socket_interface.queue_message_to_adapter(data)
-    LoggerInterface.info(f'Received message from chainlink with socket id {socket_id}')
+    message = MessageDeserializer.deserialize(data)
+    if message is not None:
+        socket_interface.queue_message_to_adapter(data)
+        LoggerInterface.info(f'Received message from chainlink with socket id {socket_id}')
+    else:
+        LoggerInterface.error(f'Received incorrect data from {socket_id}: {data}')
 
 
 if __name__ == '__main__':

@@ -4,8 +4,8 @@ from time import sleep
 
 from chainchomplib import LoggerInterface
 from chainchomplib.adapterlayer.Message import Message
+from chainchomplib.data import SocketEvents
 
-from chainchomp.src.adapterlayer import ServerEvents
 from chainchomp.src.adapterlayer.SocketInterface import SocketInterface
 
 
@@ -37,5 +37,5 @@ class MessageReceiveWorker(Thread):
                     )
                     if connection is not None:
                         self.socket_interface.adapter_socket_io.emit(
-                            ServerEvents.EMIT_TO_APPLICATION, message.get_serialized(), room=connection.sid
+                            SocketEvents.EMIT_TO_APPLICATION, message.get_serialized(), room=connection.sid
                         )
