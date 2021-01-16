@@ -7,7 +7,6 @@ from chainchomp.src.adapterlayer.Connection import Connection
 
 
 class SocketInterface:
-    __instance = None
     active_adapter_connections = []
     active_chainlink_connections = []
     messages_to_send_to_adapters = queue.Queue()
@@ -41,19 +40,15 @@ class SocketInterface:
     def get_adapter_connection_by_adapter_name(self, adapter_name: str) -> Connection or None:
         connection_optional = [
             connection for connection in self.active_adapter_connections
-            if connection.adapter_name == adapter_name
+            if connection.name == adapter_name
         ]
         return connection_optional[0] if len(connection_optional) == 1 else None
 
     def get_client_application_connection_by_chainlink_name(self, chainlink_name: str) -> Connection or None:
         connection_optional = [
             connection for connection in self.active_chainlink_connections
-            if connection.adapter_name == chainlink_name
+            if connection.name == chainlink_name
         ]
         return connection_optional[0] if len(connection_optional) == 1 else None
 
-    def __new__(cls):
-        if SocketInterface.__instance is None:
-            SocketInterface.__instance = object.__new__(cls)
-        return SocketInterface.__instance
 

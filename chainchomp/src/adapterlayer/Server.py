@@ -1,9 +1,11 @@
+import os
+
 import socketio
 from aiohttp import web
 from chainchomplib import LoggerInterface
-from chainchomplib.adapterlayer.Message import Message
 from chainchomplib.adapterlayer.MessageDeserializer import MessageDeserializer
-from chainchomplib.adapterlayer.MessageHeader import MessageHeader
+from chainchomplib.configlayer.ChainfileDeserializer import ChainfileDeserializer
+from chainchomplib.configlayer.resolver.AdapterResolver import AdapterResolver
 from chainchomplib.data import SocketEvents
 
 from chainchomp.src.adapterlayer.MessageReceiveWorker import MessageReceiveWorker
@@ -23,14 +25,76 @@ message_send_worker.start()
 routes = web.RouteTableDef()
 
 
-@routes.post('/adapter/assign/link')
+@routes.post('/chainfile/remote/receive')
 async def assign_link_to_adapter(request):
-    return web.Response(text="Hello, world")
+    """
+    This endpoint receives a remote chainfile
+    """
+    data: dict = await request.json()
+    data_is_next = data.get('is_next', False)
+    data_is_previous = data.get('is_previous', False)
+    if not data_is_next and not data_is_previous:
+        return web.Response(
+            reason='The data has to specify if it is addressing a previous or a next chainlink',
+            status=403
+        )
+
+    if data_is_next == data_is_previous:
+        return web.Response(
+            reason='The receiving chainlink can\'t be next and also previous.',
+            status=403
+        )
+
+    chainfile_model = ChainfileDeserializer.deserialize(data.get('chainfile', {}))
+    if not chainfile_model:
+        return web.Response(reason='The data did not have a serialized chainfile', status=403)
+
+    if not chainfile_model.adapter:
+        return web.Response(reason='The serialized model had no adapter', status=403)
+
+    adapter_connection = socket_interface.get_adapter_connection_by_adapter_name(chainfile_model.adapter)
+    if not adapter_connection:
+        adapter_model = AdapterResolver.resolve(chainfile_model.adapter)
+        sentence_inlay = ''
+        if adapter_model is not None:
+            sentence_inlay = 'The Server will attempt to start this adapter. Please try again.'
+            os.system(adapter_model.start)
+        return web.Response(
+            reason=f'No matching adapter is currently connected. {sentence_inlay}',
+            status=500
+        )
+    await sio.emit(SocketEvents.EMIT_REMOTE_CHAINFILE_TO_ADAPTER, data)
+    return web.Response(status=200)
 
 
-@routes.post('/adapter/configure')
+@routes.post('/chainfile/local/receive')
 async def configure_adapter(request):
-    return web.Response(text="Hello, world")
+    """
+    This endpoint receives a local chainfile
+    """
+    data = await request.json()
+    chainfile_model = ChainfileDeserializer.deserialize(data.get('chainfile', {}))
+    if not chainfile_model:
+        return web.Response(reason='The data did not have a serialized chainfile', status=403)
+
+    if not chainfile_model.adapter:
+        return web.Response(reason='The serialized model had no adapter', status=403)
+
+    if not chainfile_model.chainlink_name:
+        return web.Response(reason='The serialized model had no chainlink name', status=403)
+
+    adapter_connection = socket_interface.get_adapter_connection_by_adapter_name(chainfile_model.adapter)
+    if not adapter_connection:
+        adapter_model = AdapterResolver.resolve(chainfile_model.adapter)
+        sentence_inlay = ''
+        if adapter_model is not None:
+            sentence_inlay = 'The Server will attempt to start this adapter. Please try again.'
+            os.system(adapter_model.start)
+        return web.Response(
+            reason=f'No matching adapter is currently connected. {sentence_inlay}',
+            status=500
+        )
+    return web.Response(status=200)
 
 
 @sio.event
@@ -41,13 +105,12 @@ async def connect(sid, environ: dict):
         LoggerInterface.error(f'{sid} has supplied a wrong configuration of headers to connect. Disconnecting')
         await sio.disconnect(sid)
     if chainlink_name is None and adapter is None:
-        LoggerInterface.error(f'{sid} did not supply adapter or chainlink name')
+        LoggerInterface.error(f'{sid} did not supply adapter or chainlink name. Disconnecting')
         await sio.disconnect(sid)
     if adapter is not None:
         socket_interface.activate_adapter_connection(
             Connection(sid, True, adapter)
         )
-        await sio.emit(SocketEvents.EMIT_TO_ADAPTER, Message('TEST TEST TEST', MessageHeader('one', ['two', 'three'], 'knorf')).get_serialized(), sid)
     if chainlink_name is not None:
         socket_interface.active_chainlink_connections(
             Connection(sid, True, chainlink_name)
