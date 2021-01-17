@@ -3,10 +3,13 @@ import os
 import socketio
 from aiohttp import web
 from chainchomplib import LoggerInterface
+from chainchomplib.adapterlayer.Message import Message
 from chainchomplib.adapterlayer.MessageDeserializer import MessageDeserializer
+from chainchomplib.adapterlayer.MessageHeader import MessageHeader
 from chainchomplib.configlayer.ChainfileDeserializer import ChainfileDeserializer
 from chainchomplib.configlayer.resolver.AdapterResolver import AdapterResolver
 from chainchomplib.data import SocketEvents
+from chainchomplib.data.RemoteChainfileDTO import RemoteChainfileDTO
 
 from chainchomp.src.adapterlayer.MessageReceiveWorker import MessageReceiveWorker
 from chainchomp.src.adapterlayer.MessageSendWorker import MessageSendWorker
@@ -44,6 +47,9 @@ async def assign_link_to_adapter(request):
             reason='The receiving chainlink can\'t be next and also previous.',
             status=403
         )
+    data_name_of_called_link = data.get('name_of_called_link', None)
+    if data_name_of_called_link is None:
+        return web.Response(reason='The called links name needs to be specified', status=403)
 
     chainfile_model = ChainfileDeserializer.deserialize(data.get('chainfile', {}))
     if not chainfile_model:
@@ -63,7 +69,14 @@ async def assign_link_to_adapter(request):
             reason=f'No matching adapter is currently connected. {sentence_inlay}',
             status=500
         )
-    await sio.emit(SocketEvents.EMIT_REMOTE_CHAINFILE_TO_ADAPTER, data)
+    remote_chainfile_dto = RemoteChainfileDTO(
+        chainfile_model,
+        data_is_next,
+        data_is_previous,
+        request.remote,
+        data_name_of_called_link
+    )
+    await sio.emit(SocketEvents.EMIT_REMOTE_CHAINFILE_TO_ADAPTER, remote_chainfile_dto.get_serialized())
     return web.Response(status=200)
 
 
@@ -112,7 +125,7 @@ async def connect(sid, environ: dict):
             Connection(sid, True, adapter)
         )
     if chainlink_name is not None:
-        socket_interface.active_chainlink_connections(
+        socket_interface.activate_client_connection(
             Connection(sid, True, chainlink_name)
         )
 
