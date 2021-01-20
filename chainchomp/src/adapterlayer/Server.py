@@ -1,13 +1,8 @@
-import os
-
 import socketio
 from aiohttp import web
 from chainchomplib import LoggerInterface
-from chainchomplib.adapterlayer.Message import Message
 from chainchomplib.adapterlayer.MessageDeserializer import MessageDeserializer
-from chainchomplib.adapterlayer.MessageHeader import MessageHeader
 from chainchomplib.configlayer.ChainfileDeserializer import ChainfileDeserializer
-from chainchomplib.configlayer.resolver.AdapterResolver import AdapterResolver
 from chainchomplib.data import SocketEvents
 from chainchomplib.data.RemoteChainfileDTO import RemoteChainfileDTO
 
@@ -60,13 +55,9 @@ async def assign_link_to_adapter(request):
 
     adapter_connection = socket_interface.get_adapter_connection_by_adapter_name(chainfile_model.adapter)
     if not adapter_connection:
-        adapter_model = AdapterResolver.resolve(chainfile_model.adapter)
-        sentence_inlay = ''
-        if adapter_model is not None:
-            sentence_inlay = 'The Server will attempt to start this adapter. Please try again.'
-            os.system(adapter_model.start)
         return web.Response(
-            reason=f'No matching adapter is currently connected. {sentence_inlay}',
+            reason='No matching adapter is currently connected. '
+                   'Please start the adapter on the remote host and try again.',
             status=500
         )
     remote_chainfile_dto = RemoteChainfileDTO(
@@ -98,13 +89,9 @@ async def configure_adapter(request):
 
     adapter_connection = socket_interface.get_adapter_connection_by_adapter_name(chainfile_model.adapter)
     if not adapter_connection:
-        adapter_model = AdapterResolver.resolve(chainfile_model.adapter)
-        sentence_inlay = ''
-        if adapter_model is not None:
-            sentence_inlay = 'The Server will attempt to start this adapter. Please try again.'
-            os.system(adapter_model.start)
         return web.Response(
-            reason=f'No matching adapter is currently connected. {sentence_inlay}',
+            reason='No matching adapter is currently connected. '
+                   'Please start the adapter on the remote host and try again.',
             status=500
         )
     return web.Response(status=200)
@@ -149,6 +136,7 @@ async def receive_message_from_adapter(socket_id, data):
 @sio.on(SocketEvents.RECEIVE_MESSAGE_FROM_CHAINLINK)
 async def receive_message_from_chainlink(socket_id, data):
     message = MessageDeserializer.deserialize(data)
+    print(message)
     if message is not None:
         socket_interface.queue_message_to_adapter(data)
         LoggerInterface.info(f'Received message from chainlink with socket id {socket_id}')
