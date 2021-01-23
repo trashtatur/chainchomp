@@ -28,10 +28,6 @@ class MessageSendWorker(Thread):
                 sleep(1)
                 continue
             else:
-                """
-                This works in both directions because a client has to declare the adapter as the recipient.
-                And the adapter specifies the clients chainlink name as the recipient
-                """
                 connection = self.socket_interface.get_adapter_connection_by_adapter_name(
                     message.message_header.adapter_name
                 )
