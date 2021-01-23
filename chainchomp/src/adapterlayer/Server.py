@@ -136,9 +136,8 @@ async def receive_message_from_adapter(socket_id, data):
 @sio.on(SocketEvents.RECEIVE_MESSAGE_FROM_CHAINLINK)
 async def receive_message_from_chainlink(socket_id, data):
     message = MessageDeserializer.deserialize(data)
-    print(message)
     if message is not None:
-        socket_interface.queue_message_to_adapter(data)
+        socket_interface.queue_message_to_adapter(message)
         LoggerInterface.info(f'Received message from chainlink with socket id {socket_id}')
     else:
         LoggerInterface.error(f'Received incorrect data from {socket_id}: {data}')
