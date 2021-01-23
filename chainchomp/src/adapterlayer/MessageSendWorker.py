@@ -32,14 +32,19 @@ class MessageSendWorker(Thread):
                 This works in both directions because a client has to declare the adapter as the recipient.
                 And the adapter specifies the clients chainlink name as the recipient
                 """
-                print('found message')
-                for recipient in message.message_header.recipients:
-                    print(f'sending message to {recipient}')
-                    connection = self.socket_interface.get_adapter_connection_by_adapter_name(
-                        message.message_header.adapter_name
+                connection = self.socket_interface.get_adapter_connection_by_adapter_name(
+                    message.message_header.adapter_name
+                )
+
+                if connection is None:
+                    LoggerInterface.warning(
+                        f'No adapter with the name {message.message_header.adapter_name} '
+                        f'is connected yet. Putting back message and continuing'
                     )
-                    if connection is not None:
-                        print(f'found connection of {message.message_header.adapter_name}. Sending now!')
-                        asyncio.run(self.socket_interface.adapter_socket_io.emit(
-                            SocketEvents.EMIT_TO_ADAPTER, message.get_serialized(), room=connection.sid
-                        ))
+                    self.socket_interface.queue_message_to_adapter(message)
+                    continue
+
+                for _ in message.message_header.recipients:
+                    asyncio.run(self.socket_interface.adapter_socket_io.emit(
+                        SocketEvents.EMIT_TO_ADAPTER, message.get_serialized(), room=connection.sid
+                    ))

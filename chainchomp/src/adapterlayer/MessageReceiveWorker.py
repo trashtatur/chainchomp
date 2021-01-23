@@ -33,7 +33,7 @@ class MessageReceiveWorker(Thread):
                 """
                 for recipient in message.message_header.recipients:
                     connection = self.socket_interface.get_client_application_connection_by_chainlink_name(
-                        recipient
+                        recipient.split('::')[1]
                     )
                     if connection is not None:
                         self.socket_interface.adapter_socket_io.emit(
